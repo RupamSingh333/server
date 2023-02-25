@@ -144,6 +144,8 @@ const user_login = async (req, res) => {
 //get all users
 const get_users = async (req, res) => {
   try {
+
+    
     res.status(200).send({ success: true, message: "Authentication okay" });
   } catch (error) {
     res.status(400).send({ sucess: false, message: error.message });

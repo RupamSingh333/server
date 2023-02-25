@@ -1,8 +1,8 @@
 const express = require("express");
 const app = express();
+const config = require("./config/config");
+const PORT = process.env.PORT || 5000;
 
-const mongoose = require("mongoose");
-mongoose.connect("mongodb://127.0.0.1:27017/ECOM");
 
 //user route
 const user_route = require("./routes/userRoute");
@@ -14,10 +14,21 @@ app.get("/", (req, res) => {
 });
 
 app.get('*', function(req, res){
-  res.send('<h1>Opps Not Found</h1>', 404);
+  res.status(404).send('<h1>Opps Not Found</h1>');
 });
 
 
-app.listen(5000, function () {
-  console.log("Server is Ready on the localhost:5000/");
-});
+
+const serverStart = async () => {
+  try {
+    await config.connectDB(config.config.LOCAL_URI);
+    app.listen(PORT, () => {
+        console.log(`Server is listen on localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+serverStart();
+
