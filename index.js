@@ -1,8 +1,12 @@
 const express = require("express");
 const app = express();
 const config = require("./config/config");
+const cors = require('cors');
 const PORT = process.env.PORT || 5000;
 
+
+// Allow requests from all origins
+app.use(cors());
 
 //user route
 const user_route = require("./routes/userRoute");
@@ -50,6 +54,7 @@ app.get("/", (req, res) => {
   `);
 });
 
+//when not found 
 app.get('*', function(req, res){
   res.status(404).send(`<!DOCTYPE html>
   <html>

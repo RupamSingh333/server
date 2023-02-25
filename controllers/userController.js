@@ -123,7 +123,7 @@ const user_login = async (req, res) => {
 
         const response = {
           success: true,
-          message: "User Details",
+          message: "Login Successfully",
           data: userData,
         };
         res.status(200).send(response);
