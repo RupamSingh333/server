@@ -9,7 +9,7 @@ const verifyToken = async (req, res, next) => {
   if (!token) {
     res.status(200).send({
       success: false,
-      msg: "A token is required for authentication",
+      message: "A token is required for authentication",
     });
     return false;
   }

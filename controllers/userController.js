@@ -4,6 +4,8 @@ const jwt = require("jsonwebtoken");
 const config = require("../config/config");
 const randomstring = require("randomstring");
 const nodemailer = require("nodemailer");
+const path = require('path');
+const fs = require('fs');
 
 const sendMail = async (name, email, token) => {
   try {
@@ -32,13 +34,13 @@ const sendMail = async (name, email, token) => {
 
     transporter.sendMail(mailOption, function (error, info) {
       if (error) {
-        console.log('Error From Send Mail',error);
+        console.log("Error From Send Mail", error);
       } else {
         console.log("Mail has been sent:-", info.response);
       }
     });
   } catch (error) {
-    res.status(400).send({ sucess: false, msg: error.message });
+    res.status(400).send({ sucess: false, message: error.message });
     return false;
   }
 };
@@ -48,7 +50,7 @@ const create_token = async (id) => {
     const token = await jwt.sign({ _id: id }, config.secret_key);
     return token;
   } catch (error) {
-    res.status(400).send({ sucess: false, msg: error.message });
+    res.status(400).send({ sucess: false, message: error.message });
   }
 };
 
@@ -58,7 +60,7 @@ const securePassword = async (password) => {
     const passwordHash = await bcryptjs.hash(password, 10);
     return passwordHash;
   } catch (error) {
-    res.status(400).send({ sucess: false, msg: error.message });
+    res.status(400).send({ sucess: false, message: error.message });
   }
 };
 
@@ -76,16 +78,22 @@ const register_user = async (req, res) => {
       mobile: req.body.mobile,
     });
 
-    let userData = await User.findOne({ email: req.body.email });
+    let userExists = await User.findOne({ email: req.body.email });
 
-    if (userData) {
-      res.status(200).send({ success: false, msg: "Email already exist" });
+    if (userExists) {
+      if (userExists) {
+        // Delete the uploaded image if the user already exists
+        if (req.file) {
+          fs.unlinkSync(req.file.path);
+        }
+      }
+      res.status(200).send({ success: false, message: "User already exists" });
     } else {
       const user_data_save = await user.save();
       res.status(200).send({ success: true, data: user_data_save });
     }
   } catch (error) {
-    res.status(400).send({ sucess: false, msg: error.message });
+    res.status(400).send({ sucess: false, message: error.message });
   }
 };
 
@@ -114,31 +122,31 @@ const user_login = async (req, res) => {
         };
         const response = {
           success: true,
-          msg: "User Details",
+          message: "User Details",
           data: userData,
         };
         res.status(200).send(response);
       } else {
         res
           .status(200)
-          .send({ success: false, msg: "Login details are incorrect" });
+          .send({ success: false, message: "Login details are incorrect" });
       }
     } else {
       res
         .status(200)
-        .send({ success: false, msg: "Login details are incorrect" });
+        .send({ success: false, message: "Login details are incorrect" });
     }
   } catch (error) {
-    res.status(400).send({ sucess: false, msg: error.message });
+    res.status(400).send({ sucess: false, message: error.message });
   }
 };
 
 //get all users
 const get_users = async (req, res) => {
   try {
-    res.status(200).send({ success: true, msg: "Authentication okay" });
+    res.status(200).send({ success: true, message: "Authentication okay" });
   } catch (error) {
-    res.status(400).send({ sucess: false, msg: error.message });
+    res.status(400).send({ sucess: false, message: error.message });
   }
 };
 
@@ -170,12 +178,12 @@ const update_password = async (req, res) => {
       );
       res
         .status(200)
-        .send({ success: true, msg: "Password has been update successfully." });
+        .send({ success: true, message: "Password has been update successfully." });
     } else {
-      res.status(200).send({ success: false, msg: "Invalid user id" });
+      res.status(200).send({ success: false, message: "Invalid user id" });
     }
   } catch (error) {
-    res.status(400).send({ sucess: false, msg: error.message });
+    res.status(400).send({ sucess: false, message: error.message });
   }
 };
 
@@ -204,17 +212,17 @@ const forget_password = async (req, res) => {
       sendMail(findUser.name, email, randomString);
       return res.status(200).json({
         success: true,
-        msg: "We have send mail to your mail kidly check and verify.",
+        message: "We have send mail to your mail kidly check and verify.",
       });
     } else {
       res.status(200).send({
         sucess: true,
-        msg: "This email does not exist",
+        message: "This email does not exist",
       });
       return false;
     }
   } catch (error) {
-    res.status(400).send({ sucess: false, msg: error.message });
+    res.status(400).send({ sucess: false, message: error.message });
     return false;
   }
 };

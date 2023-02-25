@@ -14,7 +14,7 @@ app.get("/", (req, res) => {
 });
 
 app.get('*', function(req, res){
-  res.send('what???', 404);
+  res.send('<h1>Opps Not Found</h1>', 404);
 });
 
 
