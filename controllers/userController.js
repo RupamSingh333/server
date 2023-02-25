@@ -4,8 +4,8 @@ const jwt = require("jsonwebtoken");
 const config = require("../config/config");
 const randomstring = require("randomstring");
 const nodemailer = require("nodemailer");
-const path = require('path');
-const fs = require('fs');
+const path = require("path");
+const fs = require("fs");
 
 const sendMail = async (name, email, token) => {
   try {
@@ -45,12 +45,12 @@ const sendMail = async (name, email, token) => {
   }
 };
 
-const create_token = async (id) => {
+const create_token = async (id, res) => {
   try {
-    const token = await jwt.sign({ _id: id }, config.secret_key);
+    const token = await jwt.sign({ _id: id }, config.config.secret_key);
     return token;
   } catch (error) {
-    res.status(400).send({ sucess: false, message: error.message });
+    console.log(error);
   }
 };
 
@@ -120,6 +120,7 @@ const user_login = async (req, res) => {
           type: userExist.type,
           token: tokenData,
         };
+
         const response = {
           success: true,
           message: "User Details",
@@ -144,9 +145,24 @@ const user_login = async (req, res) => {
 //get all users
 const get_users = async (req, res) => {
   try {
+    const users = await User.find({});
 
-    
-    res.status(200).send({ success: true, message: "Authentication okay" });
+    // Add the image URL to each user's image property
+    const usersWithImageUrls = users.map((user) => {
+      return {
+        ...user.toObject(),
+        image:
+          req.protocol + "://" + req.get("host") + "/api/uploads/" + user.image,
+      };
+    });
+
+    res
+      .status(200)
+      .send({
+        success: true,
+        message: "Authentication",
+        data: usersWithImageUrls,
+      });
   } catch (error) {
     res.status(400).send({ sucess: false, message: error.message });
   }
@@ -178,9 +194,10 @@ const update_password = async (req, res) => {
           },
         }
       );
-      res
-        .status(200)
-        .send({ success: true, message: "Password has been update successfully." });
+      res.status(200).send({
+        success: true,
+        message: "Password has been update successfully.",
+      });
     } else {
       res.status(200).send({ success: false, message: "Invalid user id" });
     }
