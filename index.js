@@ -13,10 +13,9 @@ app.get("/", (req, res) => {
   res.status(200).send("<h1>Hello Welcome to API Home Page</h1>");
 });
 
-// app.get('*', function(req, res){
-//   res.status(404).send('<h1>Opps Not Found</h1>');
-// });
-
+app.get('*', function(req, res){
+  res.status(404).send('<h1>Opps Not Found</h1>');
+});
 
 
 const serverStart = async () => {
