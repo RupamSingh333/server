@@ -1,73 +1,14 @@
 const User = require("../models/userModal");
 const bcryptjs = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const config = require("../config/config");
+const utils = require("../utils/helper");
 const randomstring = require("randomstring");
-const nodemailer = require("nodemailer");
 const path = require("path");
 const fs = require("fs");
-
-const sendMail = async (name, email, token) => {
-  try {
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      requireTLS: true,
-      auth: {
-        user: config.emailUser,
-        pass: config.emailPassword,
-      },
-    });
-
-    const mailOption = {
-      from: config.emailUser,
-      to: email,
-      subject: "For Reset Password",
-      html:
-        "<p> Hii " +
-        name +
-        ', Please copy the link and <a href="http://localhost:5000/api/reset-password?token="' +
-        token +
-        '"> Reset your password</a>',
-    };
-
-    transporter.sendMail(mailOption, function (error, info) {
-      if (error) {
-        console.log("Error From Send Mail", error);
-      } else {
-        console.log("Mail has been sent:-", info.response);
-      }
-    });
-  } catch (error) {
-    res.status(400).send({ sucess: false, message: error.message });
-    return false;
-  }
-};
-
-const create_token = async (id, res) => {
-  try {
-    const token = await jwt.sign({ _id: id }, config.config.secret_key);
-    return token;
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-// password hasing methode
-const securePassword = async (password) => {
-  try {
-    const passwordHash = await bcryptjs.hash(password, 10);
-    return passwordHash;
-  } catch (error) {
-    res.status(400).send({ sucess: false, message: error.message });
-  }
-};
 
 //register user
 const register_user = async (req, res) => {
   try {
-    const spassword = await securePassword(req.body.password);
+    const spassword = await utils.securePassword(req.body.password);
 
     const user = new User({
       name: req.body.name,
@@ -90,6 +31,54 @@ const register_user = async (req, res) => {
       res.status(200).send({ success: false, message: "User already exists" });
     } else {
       const user_data_save = await user.save();
+      await utils.sendEmail(
+        user_data_save.email,
+        "Thank You for register with us",
+        "Hii" + user_data_save.name,
+        `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+        <html xmlns="http://www.w3.org/1999/xhtml">
+            <head>
+                <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+                <title></title>
+                <style></style>
+            </head>
+            <body>
+        
+            <table border="0" cellpadding="20" cellspacing="0" width="600" id="emailContainer">
+                <tr>
+                    <td align="center" valign="top">
+                        <table border="0" cellpadding="20" cellspacing="0" width="100%" id="emailHeader">
+                            <tr>
+                                <td align="center" valign="top">
+                                Your Registration has been Successfully Please ignore if you have already recieved mail.
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="center" valign="top">
+                        <table border="0" cellpadding="20" cellspacing="0" width="100%" id="emailBody">
+                            <tr>
+                                <td align="center" valign="top">
+                                <p>User ID :` +
+          user_data_save.email +
+          `</p>
+                                <p>Password :` +
+          req.body.password +
+          `</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                      </table>
+                  </td>
+              </tr>
+            </table>
+              </body>
+          </html>`
+      );
       res.status(200).send({ success: true, data: user_data_save });
     }
   } catch (error) {
@@ -110,7 +99,7 @@ const user_login = async (req, res) => {
         userExist.password
       );
       if (passwordMatch) {
-        const tokenData = await create_token(userExist._id);
+        const tokenData = await utils.create_token(userExist._id);
         const userData = {
           _id: userExist._id,
           name: userExist.name,
@@ -156,13 +145,11 @@ const get_users = async (req, res) => {
       };
     });
 
-    res
-      .status(200)
-      .send({
-        success: true,
-        message: "Authentication",
-        data: usersWithImageUrls,
-      });
+    res.status(200).send({
+      success: true,
+      message: "Authentication",
+      data: usersWithImageUrls,
+    });
   } catch (error) {
     res.status(400).send({ sucess: false, message: error.message });
   }
@@ -184,7 +171,7 @@ const update_password = async (req, res) => {
 
     const isValid = await User.findOne({ _id: user_id });
     if (isValid) {
-      const newpassword = await securePassword(password);
+      const newpassword = await utils.securePassword(password);
 
       const updateUser = await User.findByIdAndUpdate(
         { _id: user_id },
@@ -219,7 +206,6 @@ const forget_password = async (req, res) => {
     const findUser = await User.findOne({ email: email });
     if (findUser) {
       const randomString = randomstring.generate();
-
       await User.updateOne(
         { email: email },
         {
@@ -228,7 +214,17 @@ const forget_password = async (req, res) => {
           },
         }
       );
-      sendMail(findUser.name, email, randomString);
+
+      await utils.sendEmail(
+        email,
+        "Update Password",
+        "We have send mail to your mail kidly check and verify.",
+        `<p>Hii `+findUser.name +
+          ', Please copy the link and <a href="http://localhost:5000/api/reset-password?token="'+
+          randomString +
+          '"> Reset your password</a>'
+      );
+
       return res.status(200).json({
         success: true,
         message: "We have send mail to your mail kidly check and verify.",

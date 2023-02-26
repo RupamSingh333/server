@@ -1,42 +1,17 @@
 const express = require("express");
 const user_route = express();
 const bodyParser = require("body-parser");
-const multer = require("multer");
-const path = require("path");
 const auth = require("../middleware/auth");
-
+const utils = require('../utils/helper');
 user_route.use(express.static("public"));
-// console.log(path.join(__dirname, "../public/userImages"));
-
 user_route.use(bodyParser.json());
 user_route.use(bodyParser.urlencoded({ extended: true }));
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(
-      null,
-      path.join(__dirname, "../public/uploads/"),
-      function (error, success) {
-        if (error) throw error;
-      }
-    );
-  },
-  filename: function (req, file, cb) {
-    const name = Date.now() + "_" + file.originalname;
-    cb(null, name, function (error1, success1) {
-      if (error1) throw error1;
-    });
-  },
-});
-
-const upload = multer({ storage: storage });
-
 const user_controller = require("../controllers/userController");
 
 //register api
 user_route.post(
   "/register",
-  upload.single("image"),
+  utils.uploadImage.single("image"),
   user_controller.register_user
 );
 
