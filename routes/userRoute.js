@@ -2,7 +2,7 @@ const express = require("express");
 const user_route = express();
 const bodyParser = require("body-parser");
 const auth = require("../middleware/auth");
-const utils = require('../utils/helper');
+const utils = require("../utils/helper");
 user_route.use(express.static("public"));
 user_route.use(bodyParser.json());
 user_route.use(bodyParser.urlencoded({ extended: true }));
