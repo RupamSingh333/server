@@ -12,6 +12,10 @@ app.use(cors());
 const user_route = require("./routes/userRoute");
 app.use("/api", user_route);
 
+//store route
+const store_route = require("./routes/storeRoute");
+app.use("/api", store_route);
+
 //Home Route
 app.get("/", (req, res) => {
   res.status(200).send(`<!DOCTYPE html>

@@ -18,13 +18,19 @@ user_route.post(
 // login api
 user_route.post("/login", user_controller.user_login);
 
-// get users api
-user_route.get("/getUsers", auth, user_controller.get_users);
-
 //update password route
 user_route.post("/update-password", auth, user_controller.update_password);
 
 //forget password route
 user_route.post("/forget-password", user_controller.forget_password);
+
+//reset password 
+user_route.get("/reset-password", user_controller.reset_password);
+
+
+// get users api
+user_route.get("/getUsers", auth, user_controller.get_users);
+
+
 
 module.exports = user_route;

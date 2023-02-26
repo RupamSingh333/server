@@ -11,7 +11,7 @@ var smtp = {
   secure: true,
   auth: {
     user: "rupam@doomshell.com",
-    pass: "",
+    pass: "Rupamsingh@123",
   },
 };
 

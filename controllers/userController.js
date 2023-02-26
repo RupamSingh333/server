@@ -4,11 +4,12 @@ const utils = require("../utils/helper");
 const randomstring = require("randomstring");
 const path = require("path");
 const fs = require("fs");
+const { config } = require("process");
 
 //register user
-const register_user = async (req, res) => {
+module.exports.register_user = async (req, res) => {
   try {
-    const spassword = await utils.securePassword(req.body.password);
+    const spassword = await utils.createPassword(req.body.password);
 
     const user = new User({
       name: req.body.name,
@@ -87,7 +88,7 @@ const register_user = async (req, res) => {
 };
 
 //login Method
-const user_login = async (req, res) => {
+module.exports.user_login = async (req, res) => {
   try {
     const email = req.body.email;
     const password = req.body.password;
@@ -132,7 +133,7 @@ const user_login = async (req, res) => {
 };
 
 //get all users
-const get_users = async (req, res) => {
+module.exports.get_users = async (req, res) => {
   try {
     const users = await User.find({});
 
@@ -156,7 +157,7 @@ const get_users = async (req, res) => {
 };
 
 //update password methode
-const update_password = async (req, res) => {
+module.exports.update_password = async (req, res) => {
   try {
     const user_id = req.body.user_id;
     const password = req.body.password;
@@ -171,7 +172,7 @@ const update_password = async (req, res) => {
 
     const isValid = await User.findOne({ _id: user_id });
     if (isValid) {
-      const newpassword = await utils.securePassword(password);
+      const newpassword = await utils.createPassword(password);
 
       const updateUser = await User.findByIdAndUpdate(
         { _id: user_id },
@@ -194,7 +195,7 @@ const update_password = async (req, res) => {
 };
 
 // forget password
-const forget_password = async (req, res) => {
+module.exports.forget_password = async (req, res) => {
   try {
     const email = req.body.email;
     if (!email) {
@@ -205,23 +206,24 @@ const forget_password = async (req, res) => {
     }
     const findUser = await User.findOne({ email: email });
     if (findUser) {
-      const randomString = randomstring.generate();
+      const generateToken = randomstring.generate();
       await User.updateOne(
         { email: email },
         {
           $set: {
-            token: randomString,
+            token: generateToken,
           },
         }
       );
-
+      console.log(generateToken);
       await utils.sendEmail(
         email,
         "Update Password",
         "We have send mail to your mail kidly check and verify.",
-        `<p>Hii `+findUser.name +
-          ', Please copy the link and <a href="http://localhost:5000/api/reset-password?token="'+
-          randomString +
+        "<p>Hii " +
+          findUser.name +
+          ', Please copy the link and <a href="http://localhost:5000/api/reset-password?token=' +
+          generateToken +
           '"> Reset your password</a>'
       );
 
@@ -242,10 +244,34 @@ const forget_password = async (req, res) => {
   }
 };
 
-module.exports = {
-  register_user,
-  user_login,
-  get_users,
-  update_password,
-  forget_password,
+//reset passoword
+module.exports.reset_password = async (req, res) => {
+  try {
+    const token = req.query.token;
+    const findUser = await User.findOne({ token: token });
+    const password = req.body.password;
+    if (findUser && password) {
+      const newPassword = await utils.createPassword(password);
+      const userData = await User.findByIdAndUpdate(
+        { _id: findUser._id },
+        { $set: { password: newPassword, token: null } },
+        { new: true }
+      );
+
+      res.status(200).send({
+        sucess: true,
+        message: "Password has reset successfully",
+        data: userData,
+      });
+      return false;
+    } else {
+      res
+        .status(400)
+        .send({ sucess: false, message: "This Link has been expired" });
+      return false;
+    }
+  } catch (error) {
+    res.status(400).send({ sucess: false, message: error.message });
+    return false;
+  }
 };

@@ -52,11 +52,12 @@ const sendEmail = async (email, subject, message, html) => {
 };
 
 // password hasing methode
-const securePassword = async (password) => {
+const createPassword = async (password) => {
   try {
     const passwordHash = await bcrypt.hash(password, 10);
     return passwordHash;
   } catch (error) {
+    console.log("Error in createPassword:", error);
     res.status(400).send({ sucess: false, message: error.message });
   }
 };
@@ -71,10 +72,9 @@ const create_token = async (id, res) => {
   }
 };
 
-
 module.exports = {
   uploadImage,
   sendEmail,
-  securePassword,
-  create_token
+  createPassword,
+  create_token,
 };
