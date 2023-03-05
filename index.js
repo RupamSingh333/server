@@ -16,6 +16,10 @@ app.use("/api", user_route);
 const store_route = require("./routes/storeRoute");
 app.use("/api", store_route);
 
+//category route
+const category_route = require('./routes/categoryRoute');
+app.use('/api',category_route);
+
 //Home Route
 app.get("/", (req, res) => {
   res.status(200).send(`<!DOCTYPE html>

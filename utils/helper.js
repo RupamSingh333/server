@@ -65,7 +65,9 @@ const createPassword = async (password) => {
 //create token
 const create_token = async (id, res) => {
   try {
-    const token = await jwt.sign({ _id: id }, config.config.secret_key);
+    const token = await jwt.sign({ _id: id }, config.config.secret_key, {
+      expiresIn: "12h", // expires in 12 hours
+    });
     return token;
   } catch (error) {
     console.log(error);

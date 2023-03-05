@@ -2,7 +2,7 @@ const express = require("express");
 const user_route = express();
 const bodyParser = require("body-parser");
 const auth = require("../middleware/auth");
-const utils = require("../utils/helper");
+const helper = require("../utils/helper");
 user_route.use(express.static("public"));
 user_route.use(bodyParser.json());
 user_route.use(bodyParser.urlencoded({ extended: true }));
@@ -11,7 +11,7 @@ const user_controller = require("../controllers/userController");
 //register api
 user_route.post(
   "/register",
-  utils.uploadImage.single("image"),
+  helper.uploadImage.single("image"),
   user_controller.register_user
 );
 

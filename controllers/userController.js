@@ -1,15 +1,16 @@
 const User = require("../models/userModal");
 const bcryptjs = require("bcryptjs");
-const utils = require("../utils/helper");
+const helper = require("../utils/helper");
 const randomstring = require("randomstring");
 const path = require("path");
 const fs = require("fs");
 const { config } = require("process");
+const { ObjectId } = require("mongodb");
 
 //register user
 module.exports.register_user = async (req, res) => {
   try {
-    const spassword = await utils.createPassword(req.body.password);
+    const spassword = await helper.createPassword(req.body.password);
 
     const user = new User({
       name: req.body.name,
@@ -32,7 +33,7 @@ module.exports.register_user = async (req, res) => {
       res.status(200).send({ success: false, message: "User already exists" });
     } else {
       const user_data_save = await user.save();
-      await utils.sendEmail(
+      await helper.sendEmail(
         user_data_save.email,
         "Thank You for register with us",
         "Hii" + user_data_save.name,
@@ -92,6 +93,7 @@ module.exports.user_login = async (req, res) => {
   try {
     const email = req.body.email;
     const password = req.body.password;
+    // console.log(req.body);
     let userExist = await User.findOne({ email: email });
 
     if (userExist) {
@@ -100,14 +102,14 @@ module.exports.user_login = async (req, res) => {
         userExist.password
       );
       if (passwordMatch) {
-        const tokenData = await utils.create_token(userExist._id);
+        const tokenData = await helper.create_token(userExist._id);
         const userData = {
           _id: userExist._id,
           name: userExist.name,
           password: userExist.password,
           image: userExist.image,
           mobile: userExist.mobile,
-          type: userExist.type,
+          role: userExist.role,
           token: tokenData,
         };
 
@@ -170,12 +172,12 @@ module.exports.update_password = async (req, res) => {
       });
     }
 
-    const isValid = await User.findOne({ _id: user_id });
+    const isValid = await User.findOne({ _id: ObjectId(user_id) });
     if (isValid) {
-      const newpassword = await utils.createPassword(password);
+      const newpassword = await helper.createPassword(password);
 
       const updateUser = await User.findByIdAndUpdate(
-        { _id: user_id },
+        { _id: ObjectId(user_id) },
         {
           $set: {
             password: newpassword,
@@ -216,7 +218,7 @@ module.exports.forget_password = async (req, res) => {
         }
       );
       console.log(generateToken);
-      await utils.sendEmail(
+      await helper.sendEmail(
         email,
         "Update Password",
         "We have send mail to your mail kidly check and verify.",
@@ -251,9 +253,9 @@ module.exports.reset_password = async (req, res) => {
     const findUser = await User.findOne({ token: token });
     const password = req.body.password;
     if (findUser && password) {
-      const newPassword = await utils.createPassword(password);
+      const newPassword = await helper.createPassword(password);
       const userData = await User.findByIdAndUpdate(
-        { _id: findUser._id },
+        { _id: ObjectId(findUser._id) },
         { $set: { password: newPassword, token: null } },
         { new: true }
       );

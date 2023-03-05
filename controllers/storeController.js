@@ -2,6 +2,8 @@ const Store = require("../models/storeModal");
 const User = require("../models/userModal");
 const path = require("path");
 const fs = require("fs");
+const {ObjectId} = require('mongodb');
+
 
 module.exports.create_store = async (req, res) => {
   try {
@@ -12,7 +14,7 @@ module.exports.create_store = async (req, res) => {
     const latitude= req.body.latitude;
     const longitude= req.body.longitude;
     const logo= req.file.filename;
-    const userExist = await User.findOne({ _id: req.body.vender_id });
+    const userExist = await User.findOne({ _id: ObjectId(vender_id) });
     if (userExist) {
       if (!req.body.latitude ||  !req.body.longitude) {
         // Delete the uploaded image if the user already exists
