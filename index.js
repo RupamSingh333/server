@@ -20,6 +20,15 @@ app.use("/api", store_route);
 const category_route = require('./routes/categoryRoute');
 app.use('/api',category_route);
 
+//company route
+const companyRoute = require('./routes/companyRoute');
+app.use('/api',companyRoute);
+
+//Product route
+const productRoute = require('./routes/productRoute');
+app.use('/api',productRoute);
+
+
 //Home Route
 app.get("/", (req, res) => {
   res.status(200).send(`<!DOCTYPE html>

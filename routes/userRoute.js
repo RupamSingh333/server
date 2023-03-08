@@ -27,7 +27,6 @@ user_route.post("/forget-password", user_controller.forget_password);
 //reset password 
 user_route.get("/reset-password", user_controller.reset_password);
 
-
 // get users api
 user_route.get("/getUsers", auth, user_controller.get_users);
 
