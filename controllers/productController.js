@@ -11,7 +11,8 @@ module.exports.add_product = async (req, res) => {
     const { name, price, categoryId, colors, companyId, description } =
       req.body;
     const image = req.file.filename;
-    const regex = new RegExp(name, "i");
+    // const regex = new RegExp(name, "i");
+    const regex = new RegExp('^' + name + '$', 'i');
     const productExist = await Product.findOne({ name: regex });
 
     if (productExist) {
@@ -55,7 +56,7 @@ module.exports.add_product = async (req, res) => {
 // find all products
 module.exports.get_all_products = async (req, res) => {
   try {
-    const products = await Product.find({})
+    const products = await Product.find({}).sort({ createdAt: -1 })
       .select("-__v")
       .populate({ path: "companyId", select: "name" })
       .populate({ path: "categoryId", select: "name" });

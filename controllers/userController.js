@@ -11,80 +11,48 @@ const { ObjectId } = require("mongodb");
 module.exports.register_user = async (req, res) => {
   try {
     const spassword = await helper.createPassword(req.body.password);
-
     const user = new User({
       name: req.body.name,
       email: req.body.email,
       password: spassword,
-      image: req.file.filename,
       type: req.body.type,
       mobile: req.body.mobile,
     });
 
+    if (req.file) {
+      user.image = req.file.filename;
+    } else {
+      user.image = null; // or user.image = "";
+    }
+
     let userExists = await User.findOne({ email: req.body.email });
 
     if (userExists) {
-      if (userExists) {
-        // Delete the uploaded image if the user already exists
-        if (req.file) {
-          fs.unlinkSync(req.file.path);
-        }
+      if (req.file) {
+        fs.unlinkSync(req.file.path);
       }
-      res.status(200).send({ success: false, message: "User already exists" });
+      res.status(400).send({ success: false, message: "User already exists" });
     } else {
       const user_data_save = await user.save();
-      await helper.sendEmail(
-        user_data_save.email,
-        "Thank You for register with us",
-        "Hii" + user_data_save.name,
-        `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-        <html xmlns="http://www.w3.org/1999/xhtml">
-            <head>
-                <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-                <title></title>
-                <style></style>
-            </head>
-            <body>
-        
-            <table border="0" cellpadding="20" cellspacing="0" width="600" id="emailContainer">
-                <tr>
-                    <td align="center" valign="top">
-                        <table border="0" cellpadding="20" cellspacing="0" width="100%" id="emailHeader">
-                            <tr>
-                                <td align="center" valign="top">
-                                Your Registration has been Successfully Please ignore if you have already recieved mail.
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-                <tr>
-                    <td align="center" valign="top">
-                        <table border="0" cellpadding="20" cellspacing="0" width="100%" id="emailBody">
-                            <tr>
-                                <td align="center" valign="top">
-                                <p>User ID :` +
-          user_data_save.email +
-          `</p>
-                                <p>Password :` +
-          req.body.password +
-          `</p>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-                      </table>
-                  </td>
-              </tr>
-            </table>
-              </body>
-          </html>`
-      );
+      if (req.file) {
+        await helper.sendEmail(
+          user_data_save.email,
+          "Thank You for register with us",
+          "Hii" + user_data_save.name
+          // email content with image attachment
+        );
+      } else {
+        await helper.sendEmail(
+          user_data_save.email,
+          "Thank You for register with us",
+          "Hii" + user_data_save.name
+          // email content without image attachment
+        );
+      }
       res.status(200).send({ success: true, data: user_data_save });
     }
   } catch (error) {
-    res.status(400).send({ sucess: false, message: error.message });
+    res.status(400).send({ success: false, message: error.message });
   }
 };
 
@@ -121,12 +89,12 @@ module.exports.user_login = async (req, res) => {
         res.status(200).send(response);
       } else {
         res
-          .status(200)
+          .status(400)
           .send({ success: false, message: "Login details are incorrect" });
       }
     } else {
       res
-        .status(200)
+        .status(400)
         .send({ success: false, message: "Login details are incorrect" });
     }
   } catch (error) {

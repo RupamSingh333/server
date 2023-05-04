@@ -57,7 +57,8 @@ const createPassword = async (password) => {
     const passwordHash = await bcrypt.hash(password, 10);
     return passwordHash;
   } catch (error) {
-    console.log("Error in createPassword:", error);
+    console.log("Error in createPassword:", error.message);
+    return error.message;
     res.status(400).send({ sucess: false, message: error.message });
   }
 };
