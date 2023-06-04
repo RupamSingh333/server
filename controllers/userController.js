@@ -11,14 +11,16 @@ const { ObjectId } = require("mongodb");
 module.exports.register_user = async (req, res) => {
   try {
     const spassword = await helper.createPassword(req.body.password);
+
     const user = new User({
-      name: req.body.name,
+      name: await helper.capitalizeName(req.body.name),
       email: req.body.email,
       password: spassword,
       type: req.body.type,
       mobile: req.body.mobile,
     });
 
+    // console.log(user); return false;
     if (req.file) {
       user.image = req.file.filename;
     } else {
@@ -34,22 +36,38 @@ module.exports.register_user = async (req, res) => {
       res.status(400).send({ success: false, message: "User already exists" });
     } else {
       const user_data_save = await user.save();
-      if (req.file) {
-        await helper.sendEmail(
-          user_data_save.email,
-          "Thank You for register with us",
-          "Hii" + user_data_save.name
-          // email content with image attachment
-        );
-      } else {
-        await helper.sendEmail(
-          user_data_save.email,
-          "Thank You for register with us",
-          "Hii" + user_data_save.name
-          // email content without image attachment
-        );
-      }
-      res.status(200).send({ success: true, data: user_data_save });
+
+      await helper.sendEmail(
+        user_data_save.email,
+        "Thank You for register with us",
+        "Hii " + user_data_save.name,
+        `<html>
+        <body>
+          <h2>Thank You for Registering with Us</h2>
+          <p>Hi ${user_data_save.name},</p>
+          <p>Thank you for registering with our service. We're excited to have you on board!</p>
+          <p>Here are your registration details:</p>
+          <ul>
+            <li>Name: ${user_data_save.name}</li>
+            <li>Email: ${user_data_save.email}</li>
+            <li>Password: ${req.body.password}</li>
+          </ul>
+          <p>If you have any questions or need assistance, please feel free to contact us.</p>
+          <p>Best regards,</p>
+          <p>Your Company</p>
+        </body>
+      </html>`
+        // email content without image attachment
+      );
+
+      res.status(200).send({
+        success: true,
+        data: user_data_save,
+        message:
+          "Thank you for registering with us, " +
+          user_data_save.name +
+          "! You have received a verification email. Kindly verify.",
+      });
     }
   } catch (error) {
     res.status(400).send({ success: false, message: error.message });
@@ -61,7 +79,6 @@ module.exports.user_login = async (req, res) => {
   try {
     const email = req.body.email;
     const password = req.body.password;
-    // console.log(req.body);
     let userExist = await User.findOne({ email: email });
 
     if (userExist) {
@@ -73,7 +90,7 @@ module.exports.user_login = async (req, res) => {
         const tokenData = await helper.create_token(userExist._id);
         const userData = {
           _id: userExist._id,
-          name: userExist.name,
+          name: userExist.name.toUpperCase(),
           password: userExist.password,
           image: userExist.image,
           mobile: userExist.mobile,

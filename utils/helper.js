@@ -75,9 +75,20 @@ const create_token = async (id, res) => {
   }
 };
 
+const capitalizeName = (name) => {
+  const words = name.split(" ");
+  const capitalizedWords = words.map((word) => {
+    const firstLetter = word.charAt(0).toUpperCase();
+    const remainingLetters = word.slice(1).toLowerCase();
+    return firstLetter + remainingLetters;
+  });
+  return capitalizedWords.join(" ");
+};
+
 module.exports = {
   uploadImage,
   sendEmail,
   createPassword,
   create_token,
+  capitalizeName,
 };
